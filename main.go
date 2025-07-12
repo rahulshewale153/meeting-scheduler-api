@@ -11,15 +11,12 @@ import (
 )
 
 func main() {
-	if len(os.Args) < 2 {
-		log.Fatal("missing config file \n usage: ./sigma-api-service <configPath>")
-	}
 	configFile := flag.String("config", "", "Service Configuration File")
 	flag.Parse()
 
-	config, err := configreader.ReadConfigFile(*configFile)
+	config, err := configreader.ReadConfigFileOrEnv(*configFile)
 	if err != nil {
-		log.Fatal("error while validating config file: %s", err.Error())
+		log.Fatalf("error while validating config file: %s", err.Error())
 	}
 	server := server.NewServer(config)
 

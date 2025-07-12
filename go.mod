@@ -3,11 +3,13 @@ module github.com/rahulshewale153/meeting-scheduler-api
 go 1.23.4
 
 require (
+	github.com/go-sql-driver/mysql v1.9.3
 	github.com/gorilla/mux v1.8.1
 	github.com/spf13/viper v1.20.1
 )
 
 require (
+	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/fsnotify/fsnotify v1.8.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect

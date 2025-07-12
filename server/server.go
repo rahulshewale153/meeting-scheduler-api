@@ -2,25 +2,68 @@ package server
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
 	"time"
 
+	"github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
 	"github.com/rahulshewale153/meeting-scheduler-api/configreader"
 )
 
 type server struct {
 	httpServer *http.Server
-	Config     *configreader.Config
+	config     *configreader.Config
+	mysqlDB    *sql.DB
 }
 
 func NewServer(config *configreader.Config) *server {
 	httpServer := &http.Server{
-		Addr: fmt.Sprintf(":%d", config.Connection.Port),
+		Addr:         fmt.Sprintf(":%d", config.Connection.Port),
+		ReadTimeout:  time.Duration(config.Connection.ReadTimeout) * time.Second,
+		WriteTimeout: time.Duration(config.Connection.WriteTimeout) * time.Second,
+		IdleTimeout:  time.Duration(config.Connection.IdleTimeout) * time.Second,
 	}
-	return &server{httpServer: httpServer, Config: config}
+
+	sqlConn, err := setupMysqlDBConnection(config)
+	if err != nil {
+		log.Fatalf("Failed to connect to MySQL: %v", err)
+	}
+
+	return &server{httpServer: httpServer, config: config, mysqlDB: sqlConn}
+}
+
+func setupMysqlDBConnection(config *configreader.Config) (*sql.DB, error) {
+	mysqlConfig := config.MySQL
+	fmt.Println(mysqlConfig)
+	mCfg := mysql.Config{
+		User:      mysqlConfig.Username,
+		Passwd:    mysqlConfig.Password,
+		Net:       "tcp",
+		Addr:      fmt.Sprintf("%s:%d", mysqlConfig.Host, mysqlConfig.Port),
+		DBName:    mysqlConfig.Database,
+		ParseTime: mysqlConfig.ParseTime,
+	}
+
+	connector, err := mysql.NewConnector(&mCfg)
+	if err != nil {
+		log.Println("Failed to create MySQL connector.", err.Error())
+		return nil, err
+	}
+
+	conn := sql.OpenDB(connector)
+	if err := conn.Ping(); err != nil {
+		log.Println("Failed to connect MySQL Server.", err.Error())
+		return nil, err
+	}
+	log.Println("Connected to MySQL Server successfully.")
+	// Set connection pool parameters
+	conn.SetMaxIdleConns(mysqlConfig.MaxIdleConns)
+	conn.SetMaxOpenConns(mysqlConfig.MaxOpenConns)
+	conn.SetConnMaxLifetime(time.Duration(mysqlConfig.ConnMaxLifetime))
+	return conn, nil
 }
 
 // service start with http endpoint

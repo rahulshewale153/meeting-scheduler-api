@@ -8,13 +8,14 @@ mysql:
   parsetime: true
   maxidleconns: 5
   maxopenconns: 10
-  connmaxlifetime: 60
+  connmaxlifetime: 30
   readtimeout: 30
+  connectiontimeout: 30
  
 # Host and port for different types of connections
 connection:
   host: "0.0.0.0"
   port: 8001
-  readtimeout: 60
-  writetimeout: 60
-  idletimeout: 60
+  readtimeout: 30
+  writetimeout: 30
+  idletimeout: 30
