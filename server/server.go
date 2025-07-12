@@ -8,22 +8,23 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/rahulshewale153/meeting-scheduler-api/configreader"
 )
 
 type server struct {
 	httpServer *http.Server
+	Config     *configreader.Config
 }
 
-func NewServer(port int) *server {
+func NewServer(config *configreader.Config) *server {
 	httpServer := &http.Server{
-		Addr: fmt.Sprintf(":%d", 8080),
+		Addr: fmt.Sprintf(":%d", config.Connection.Port),
 	}
-	return &server{httpServer: httpServer}
+	return &server{httpServer: httpServer, Config: config}
 }
 
 // service start with http endpoint
 func (s *server) Start() {
-
 	//setup http server
 	r := mux.NewRouter()
 	//basic health api
