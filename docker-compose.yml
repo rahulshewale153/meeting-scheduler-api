@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8
+    container_name: mysql-db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: meeting_scheduler
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: QWE@34QwRI+
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - scheduler-network  
+
+  migrate:
+    image: migrate/migrate
+    container_name: db-migrator
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - ./db/migrations:/migrations
+    entrypoint: /bin/sh
+    command:
+      - -c
+      - >
+        migrate
+        -source file:///migrations
+        -database "mysql://admin:QWE%4034QwRI%2B@tcp(mysql:3306)/meeting_scheduler"
+        -verbose up
+    restart: on-failure
+    networks:
+      - scheduler-network
+
+volumes:
+  mysql_data:
+networks:
+  scheduler-network:
+    name: scheduler-network
+    driver: bridge
