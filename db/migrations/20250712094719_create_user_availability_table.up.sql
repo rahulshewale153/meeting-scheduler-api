@@ -6,5 +6,5 @@ CREATE TABLE IF NOT EXISTS user_availability (
   end_time DATETIME NOT NULL COMMENT 'end time of the availability',
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (event_id) REFERENCES event_detail(id) ON DELETE CASCADE
+  FOREIGN KEY (event_id) REFERENCES event_detail(id) ON DELETE CASCADE ON UPDATE CASCADE
   );

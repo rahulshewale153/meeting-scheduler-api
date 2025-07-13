@@ -19,3 +19,11 @@ type EventSlot struct {
 	StartTime string `json:"start_time" validate:"required"`
 	EndTime   string `json:"end_time" validate:"required"`
 }
+
+type UserAvailability struct {
+	UserID       int64       `json:"user_id" validate:"required"`
+	EventID      int64       `json:"event_id" validate:"required"`
+	Availability []EventSlot `json:"availability" validate:"required,dive,required"`
+	CreatedAt    string      `json:"created_at,omitempty"`
+	UpdatedAt    string      `json:"updated_at,omitempty"`
+}

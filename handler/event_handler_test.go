@@ -65,7 +65,7 @@ func TestUpdateEvent(t *testing.T) {
 	t.Run("service error, should return internal server error", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPut, "/events/1", strings.NewReader(validRequest))
 		w := httptest.NewRecorder()
-
+		req = mux.SetURLVars(req, map[string]string{"event_id": "1"})
 		mockEventService.On("UpdateEvent", req.Context(), mock.Anything).Return(assert.AnError).Once()
 
 		eventHandler.UpdateEvent(w, req)
@@ -75,7 +75,7 @@ func TestUpdateEvent(t *testing.T) {
 	t.Run("valid request, should return no content status", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPut, "/events/1", strings.NewReader(validRequest))
 		w := httptest.NewRecorder()
-
+		req = mux.SetURLVars(req, map[string]string{"event_id": "1"})
 		mockEventService.On("UpdateEvent", req.Context(), mock.Anything).Return(nil).Once()
 
 		eventHandler.UpdateEvent(w, req)

@@ -73,14 +73,18 @@ func setupMysqlDBConnection(config *configreader.Config) (*sql.DB, error) {
 // service start with http endpoint
 func (s *server) Start() {
 	//setup repository
-	eventRepo := repository.NewEventRepository(s.mysqlDB)
+
 	transactionManager := repository.NewTransactionManager(s.mysqlDB)
+	eventRepo := repository.NewEventRepository(s.mysqlDB)
+	userAvailabilityRepo := repository.NewUserAvailabilityRepository(s.mysqlDB)
 
 	//setup service
 	eventService := service.NewEventService(transactionManager, eventRepo)
+	userAvailabilityService := service.NewUserAvailabilityService(transactionManager, userAvailabilityRepo)
 
 	//setup handler
 	eventHandler := handler.NewEventHandler(eventService)
+	userAvailabilityHandler := handler.NewUserAvailabilityHandler(userAvailabilityService)
 
 	//setup http server
 	r := mux.NewRouter()
@@ -92,8 +96,14 @@ func (s *server) Start() {
 
 	//event related api
 	r.HandleFunc("/events", eventHandler.InsertEvent).Methods(http.MethodPost)
-	r.HandleFunc("/events", eventHandler.UpdateEvent).Methods(http.MethodPut)
+	r.HandleFunc("/events/{event_id}", eventHandler.UpdateEvent).Methods(http.MethodPut)
 	r.HandleFunc("/events/{event_id}", eventHandler.DeleteEvent).Methods(http.MethodDelete)
+
+	//user availability related api
+	r.HandleFunc("/events/{event_id}/availability/{user_id}", userAvailabilityHandler.InsertUserAvailability).Methods(http.MethodPost)
+	r.HandleFunc("/events/{event_id}/availability/{user_id}", userAvailabilityHandler.GetUserAvailability).Methods(http.MethodGet)
+	r.HandleFunc("/events/{event_id}/availability/{user_id}", userAvailabilityHandler.UpdateUserAvailability).Methods(http.MethodPut)
+	r.HandleFunc("/events/{event_id}/availability/{user_id}", userAvailabilityHandler.DeleteUserAvailability).Methods(http.MethodDelete)
 
 	s.httpServer.Handler = r
 	go func() {

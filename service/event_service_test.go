@@ -87,10 +87,14 @@ func TestInsertEvent(t *testing.T) {
 		t.Run("Function must return an error when the insert event slots operation fails", func(t *testing.T) {
 			createEventReq.ProposedSlots[0].StartTime = "2025-07-12T10:00:00Z"
 			createEventReq.ProposedSlots[0].EndTime = "2025-07-12T11:00:00Z"
+			repoEventSlot := model.EventSlot{
+				StartTime: "2025-07-12 10:00:00",
+				EndTime:   "2025-07-12 11:00:00",
+			}
 			mockTransactionManager.On("BeginTransaction", ctx).Return(tx, nil).Once()
 			mockEventRepo.On("InsertEvent", ctx, tx, createEventReq.Event).
 				Return(int64(1), nil).Once()
-			mockEventRepo.On("InsertEventSlots", ctx, tx, int64(1), createEventReq.ProposedSlots[0]).
+			mockEventRepo.On("InsertEventSlots", ctx, tx, int64(1), repoEventSlot).
 				Return(assert.AnError).Once()
 			_, err := service.InsertEvent(ctx, createEventReq)
 			assert.Error(t, err)
@@ -102,10 +106,14 @@ func TestInsertEvent(t *testing.T) {
 		t.Run("Function must return nil when the insert operation is successful", func(t *testing.T) {
 			createEventReq.ProposedSlots[0].StartTime = "2025-07-12T10:00:00Z"
 			createEventReq.ProposedSlots[0].EndTime = "2025-07-12T11:00:00Z"
+			repoEventSlot := model.EventSlot{
+				StartTime: "2025-07-12 10:00:00",
+				EndTime:   "2025-07-12 11:00:00",
+			}
 			mockTransactionManager.On("BeginTransaction", ctx).Return(tx, nil).Once()
 			mockEventRepo.On("InsertEvent", ctx, tx, createEventReq.Event).
 				Return(int64(1), nil).Once()
-			mockEventRepo.On("InsertEventSlots", ctx, tx, int64(1), createEventReq.ProposedSlots[0]).
+			mockEventRepo.On("InsertEventSlots", ctx, tx, int64(1), repoEventSlot).
 				Return(nil).Once()
 
 			eventID, err := service.InsertEvent(ctx, createEventReq)
@@ -189,8 +197,8 @@ func TestUpdateEvent(t *testing.T) {
 			mockEventRepo.On("GetEventSlots", ctx, updateEventReq.Event.ID).
 				Return([]model.EventSlot{}, nil).Once()
 			mockEventRepo.On("InsertEventSlots", ctx, tx, updateEventReq.Event.ID, model.EventSlot{
-				StartTime: "2025-07-12T12:00:00Z",
-				EndTime:   "2025-07-12T13:00:00Z",
+				StartTime: "2025-07-12 12:00:00",
+				EndTime:   "2025-07-12 13:00:00",
 			}).Return(assert.AnError).Once()
 
 			err := service.UpdateEvent(ctx, updateEventReq)
@@ -207,8 +215,8 @@ func TestUpdateEvent(t *testing.T) {
 			mockEventRepo.On("GetEventSlots", ctx, updateEventReq.Event.ID).
 				Return([]model.EventSlot{}, nil).Once()
 			mockEventRepo.On("InsertEventSlots", ctx, tx, updateEventReq.Event.ID, model.EventSlot{
-				StartTime: "2025-07-12T12:00:00Z",
-				EndTime:   "2025-07-12T13:00:00Z",
+				StartTime: "2025-07-12 12:00:00",
+				EndTime:   "2025-07-12 13:00:00",
 			}).Return(nil).Once()
 
 			err := service.UpdateEvent(ctx, updateEventReq)

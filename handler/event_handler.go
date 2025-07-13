@@ -60,6 +60,21 @@ func (h *EventHandler) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	vars := mux.Vars(r)
+	eventIDStr := vars["event_id"]
+	if eventIDStr == "" {
+		http.Error(w, "event_id is required", http.StatusBadRequest)
+		return
+	}
+
+	eventID, err := strconv.ParseInt(eventIDStr, 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid event_id", http.StatusBadRequest)
+		return
+	}
+
+	req.ID = eventID // Set the ID in the request to update the specific event
+
 	err = h.eventService.UpdateEvent(r.Context(), req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
