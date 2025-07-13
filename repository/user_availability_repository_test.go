@@ -4,6 +4,7 @@ import (
 	"context"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/rahulshewale153/meeting-scheduler-api/model"
@@ -28,8 +29,8 @@ func TestInsertUserAvailability(t *testing.T) {
 		EventID: 1,
 		Availability: []model.EventSlot{
 			{
-				StartTime: "2023-10-01 10:00:00",
-				EndTime:   "2023-10-01 11:00:00",
+				StartTime: time.Date(2025, 07, 13, 10, 0, 0, 0, time.UTC),
+				EndTime:   time.Date(2025, 07, 13, 11, 0, 0, 0, time.UTC),
 			},
 		},
 	}
@@ -65,6 +66,8 @@ func TestGetAllEventUsers(t *testing.T) {
 	ctx := context.Background()
 
 	eventID := int64(1)
+	startTime := time.Date(2025, 07, 13, 10, 0, 0, 0, time.UTC)
+	endTime := time.Date(2025, 07, 13, 11, 0, 0, 0, time.UTC)
 
 	query := `SELECT id, user_id, start_time, end_time FROM user_availability WHERE event_id = ?`
 	t.Run("Function must return an error when the read operation fails", func(t *testing.T) {
@@ -78,8 +81,8 @@ func TestGetAllEventUsers(t *testing.T) {
 
 	t.Run("Function must return a map of user IDs and their availability when the read operation is successful", func(t *testing.T) {
 		rows := sqlmock.NewRows([]string{"id", "user_id", "start_time", "end_time"}).
-			AddRow(1, 1, "2023-10-01 10:00:00", "2023-10-01 11:00:00").
-			AddRow(2, 2, "2023-10-01 12:00:00", "2023-10-01 13:00:00")
+			AddRow(1, 1, startTime, endTime).
+			AddRow(2, 2, startTime, endTime)
 
 		mock.ExpectQuery(regexp.QuoteMeta(query)).
 			WithArgs(eventID).
@@ -88,8 +91,8 @@ func TestGetAllEventUsers(t *testing.T) {
 		eventUsers, err := repository.GetAllEventUsers(ctx, eventID)
 		assert.NoError(t, err)
 		assert.Len(t, eventUsers, 2)
-		assert.Contains(t, eventUsers[1], model.EventSlot{ID: 1, StartTime: "2023-10-01 10:00:00", EndTime: "2023-10-01 11:00:00"})
-		assert.Contains(t, eventUsers[2], model.EventSlot{ID: 2, StartTime: "2023-10-01 12:00:00", EndTime: "2023-10-01 13:00:00"})
+		assert.Contains(t, eventUsers[1], model.EventSlot{ID: 1, StartTime: time.Date(2025, 07, 13, 10, 0, 0, 0, time.UTC), EndTime: time.Date(2025, 07, 13, 11, 0, 0, 0, time.UTC)})
+		assert.Contains(t, eventUsers[2], model.EventSlot{ID: 2, StartTime: time.Date(2025, 07, 13, 10, 0, 0, 0, time.UTC), EndTime: time.Date(2025, 07, 13, 11, 0, 0, 0, time.UTC)})
 	})
 }
 
@@ -107,24 +110,24 @@ func TestDeleteUserAvailability(t *testing.T) {
 	ctx := context.Background()
 
 	userID := int64(1)
-	availabilityID := int64(1)
+	eventID := int64(1)
 
-	query := `DELETE FROM user_availability WHERE id = ? AND user_id = ?`
+	query := `DELETE FROM user_availability WHERE event_id = ? AND user_id = ?`
 	t.Run("Function must return an error when the delete operation fails", func(t *testing.T) {
 		mock.ExpectExec(regexp.QuoteMeta(query)).
-			WithArgs(userID, availabilityID).
+			WithArgs(userID, eventID).
 			WillReturnError(assert.AnError)
 
-		err := repository.DeleteUserAvailability(ctx, tx, userID, availabilityID)
+		err := repository.DeleteUserAvailability(ctx, tx, userID, eventID)
 		assert.Error(t, err)
 	})
 
 	t.Run("Function must not return an error when the delete operation is successful", func(t *testing.T) {
 		mock.ExpectExec(regexp.QuoteMeta(query)).
-			WithArgs(userID, availabilityID).
+			WithArgs(userID, eventID).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
-		err := repository.DeleteUserAvailability(ctx, tx, userID, availabilityID)
+		err := repository.DeleteUserAvailability(ctx, tx, userID, eventID)
 		assert.NoError(t, err)
 	})
 
@@ -140,6 +143,8 @@ func TestGetUserAvailability(t *testing.T) {
 
 	eventID := int64(1)
 	userID := int64(1)
+	startTime := time.Date(2025, 07, 13, 10, 0, 0, 0, time.UTC)
+	endTime := time.Date(2025, 07, 13, 11, 0, 0, 0, time.UTC)
 
 	query := `SELECT id, start_time, end_time FROM user_availability WHERE event_id = ? AND user_id = ?`
 	t.Run("Function must return an error when the read operation fails", func(t *testing.T) {
@@ -153,8 +158,8 @@ func TestGetUserAvailability(t *testing.T) {
 
 	t.Run("Function must return a slice of EventSlot when the read operation is successful", func(t *testing.T) {
 		rows := sqlmock.NewRows([]string{"id", "start_time", "end_time"}).
-			AddRow(1, "2023-10-01 10:00:00", "2023-10-01 11:00:00").
-			AddRow(2, "2023-10-01 12:00:00", "2023-10-01 13:00:00")
+			AddRow(1, startTime, endTime).
+			AddRow(2, startTime, endTime)
 
 		mock.ExpectQuery(regexp.QuoteMeta(query)).
 			WithArgs(eventID, userID).
@@ -163,7 +168,7 @@ func TestGetUserAvailability(t *testing.T) {
 		slots, err := repository.GetUserAvailability(ctx, eventID, userID)
 		assert.NoError(t, err)
 		assert.Len(t, slots, 2)
-		assert.Equal(t, slots[0].StartTime, "2023-10-01 10:00:00")
-		assert.Equal(t, slots[0].EndTime, "2023-10-01 11:00:00")
+		assert.Equal(t, slots[0].StartTime, time.Date(2025, 07, 13, 10, 0, 0, 0, time.UTC))
+		assert.Equal(t, slots[0].EndTime, time.Date(2025, 07, 13, 11, 0, 0, 0, time.UTC))
 	})
 }

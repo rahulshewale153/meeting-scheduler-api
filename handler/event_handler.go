@@ -43,7 +43,10 @@ func (h *EventHandler) InsertEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]int64{"event_id": eventID})
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"event_id": eventID,
+		"message":  "Event created successfully",
+	})
 }
 
 // UpdateEvent updates an existing event
@@ -81,6 +84,7 @@ func (h *EventHandler) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "Event updated successfully"})
 }
 
 // DeleteEvent deletes an existing event
@@ -104,4 +108,5 @@ func (h *EventHandler) DeleteEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "Event deleted successfully"})
 }

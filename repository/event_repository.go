@@ -99,3 +99,19 @@ func (eventRepo *eventRepository) GetEventSlots(ctx context.Context, eventID int
 
 	return slots, nil
 }
+
+// Get Event by ID
+func (eventRepo *eventRepository) GetEvent(ctx context.Context, eventID int64) (model.Event, error) {
+	row := eventRepo.dbConn.QueryRowContext(ctx, `SELECT id, title, organizer_id, duration_minutes, created_at, updated_at FROM event_detail WHERE id = ?`, eventID)
+
+	var event model.Event
+	if err := row.Scan(&event.ID, &event.Title, &event.OrganizerID, &event.DurationMinutes, &event.CreatedAt, &event.UpdatedAt); err != nil {
+		if err == sql.ErrNoRows {
+			return model.Event{}, nil // Event not found
+		}
+		log.Println("Error getting event by ID:", err)
+		return model.Event{}, err
+	}
+
+	return event, nil
+}

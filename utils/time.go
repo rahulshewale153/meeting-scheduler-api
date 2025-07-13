@@ -5,20 +5,15 @@ import (
 	"time"
 )
 
-//convert incoming time string to utc time in string format
-
-func ConvertToUTC(ctx context.Context, timeStr string) (string, error) {
+// convert incoming time string to utc time in string format
+func ConvertTimeToUTC(ctx context.Context, timeStr time.Time) (time.Time, error) {
 	// Parse the incoming time string
 	loc, err := time.LoadLocation("UTC")
 	if err != nil {
-		return "", err
+		return time.Time{}, err
 	}
 
-	t, err := time.ParseInLocation(time.RFC3339, timeStr, loc)
-	if err != nil {
-		return "", err
-	}
-
-	// Format the time in UTC
-	return t.UTC().Format(time.DateTime), nil
+	// Convert the time to UTC
+	utcTime := timeStr.In(loc)
+	return utcTime, nil
 }

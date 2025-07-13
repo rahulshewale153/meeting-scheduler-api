@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"log"
+	"time"
 
 	"github.com/rahulshewale153/meeting-scheduler-api/model"
 )
@@ -17,7 +18,7 @@ func NewUserAvailabilityRepository(dbConn *sql.DB) UserAvailabilityRepositoryI {
 }
 
 // InsertUserAvailability: inserts a new user availability record into the database.
-func (userRepo *userAvailabilityRepository) InsertUserAvailability(ctx context.Context, tx *sql.Tx, userID int64, eventID int64, startTime string, endTime string) (int64, error) {
+func (userRepo *userAvailabilityRepository) InsertUserAvailability(ctx context.Context, tx *sql.Tx, userID int64, eventID int64, startTime time.Time, endTime time.Time) (int64, error) {
 	query := `INSERT INTO user_availability (event_id, user_id, start_time, end_time) VALUES (?, ?, ?, ?)`
 	result, err := tx.ExecContext(ctx, query, eventID, userID, startTime, endTime)
 	if err != nil {
@@ -59,9 +60,9 @@ func (userRepo *userAvailabilityRepository) GetAllEventUsers(ctx context.Context
 }
 
 // DeleteUserAvailability: deletes a user availability record from the database.
-func (userRepo *userAvailabilityRepository) DeleteUserAvailability(ctx context.Context, tx *sql.Tx, userID int64, availabilityID int64) error {
-	query := `DELETE FROM user_availability WHERE id = ? AND user_id = ?`
-	_, err := tx.ExecContext(ctx, query, availabilityID, userID)
+func (userRepo *userAvailabilityRepository) DeleteUserAvailability(ctx context.Context, tx *sql.Tx, userID int64, eventID int64) error {
+	query := `DELETE FROM user_availability WHERE event_id = ? AND user_id = ?`
+	_, err := tx.ExecContext(ctx, query, eventID, userID)
 	if err != nil {
 		log.Printf("Error deleting user availability: %v", err)
 		return err
@@ -71,7 +72,7 @@ func (userRepo *userAvailabilityRepository) DeleteUserAvailability(ctx context.C
 
 // GetUserAvailability: retrieves the availability of specific user for a specific event.
 func (userRepo *userAvailabilityRepository) GetUserAvailability(ctx context.Context, eventID int64, userID int64) ([]model.EventSlot, error) {
-	var slots []model.EventSlot
+	slots := []model.EventSlot{}
 	query := `SELECT id, start_time, end_time FROM user_availability WHERE event_id = ? AND user_id = ?`
 	rows, err := userRepo.dbConn.QueryContext(ctx, query, eventID, userID)
 	if err != nil {

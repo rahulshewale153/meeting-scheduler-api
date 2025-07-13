@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"time"
 
 	"github.com/rahulshewale153/meeting-scheduler-api/model"
 	"github.com/stretchr/testify/mock"
@@ -12,7 +13,7 @@ type MockUserAvailabilityRepository struct {
 	mock.Mock
 }
 
-func (m *MockUserAvailabilityRepository) InsertUserAvailability(ctx context.Context, tx *sql.Tx, userID int64, eventID int64, startTime string, endTime string) (int64, error) {
+func (m *MockUserAvailabilityRepository) InsertUserAvailability(ctx context.Context, tx *sql.Tx, userID int64, eventID int64, startTime time.Time, endTime time.Time) (int64, error) {
 	args := m.Called(ctx, tx, userID, eventID, startTime, endTime)
 	return args.Get(0).(int64), args.Error(1)
 }

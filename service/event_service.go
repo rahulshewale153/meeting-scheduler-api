@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/rahulshewale153/meeting-scheduler-api/model"
@@ -49,13 +48,13 @@ func (s *eventService) InsertEvent(ctx context.Context, createEventReq model.Eve
 
 	//insert event slot
 	for _, slot := range createEventReq.ProposedSlots {
-		slot.StartTime, err = utils.ConvertToUTC(ctx, slot.StartTime)
+		slot.StartTime, err = utils.ConvertTimeToUTC(ctx, slot.StartTime)
 		if err != nil {
 			log.Println("Error converting start time to UTC:", err)
 			return 0, err
 		}
 
-		slot.EndTime, err = utils.ConvertToUTC(ctx, slot.EndTime)
+		slot.EndTime, err = utils.ConvertTimeToUTC(ctx, slot.EndTime)
 		if err != nil {
 			log.Println("Error converting end time to UTC:", err)
 			return 0, err
@@ -105,22 +104,22 @@ func (s *eventService) UpdateEvent(ctx context.Context, updateEventReq model.Eve
 	}
 
 	for _, e := range existingSlots {
-		key := slotKey(e)
+		key := utils.SlotKey(e)
 		existingMap[key] = e
 	}
 
 	// insert new slots that are not in the existing slots
 	for _, slot := range updateEventReq.ProposedSlots {
-		key := slotKey(slot)
+		key := utils.SlotKey(slot)
 		incomingMap[key] = slot
 		if _, ok := existingMap[key]; !ok {
-			slot.StartTime, err = utils.ConvertToUTC(ctx, slot.StartTime)
+			slot.StartTime, err = utils.ConvertTimeToUTC(ctx, slot.StartTime)
 			if err != nil {
 				log.Println("Error converting start time to UTC:", err)
 				return err
 			}
 
-			slot.EndTime, err = utils.ConvertToUTC(ctx, slot.EndTime)
+			slot.EndTime, err = utils.ConvertTimeToUTC(ctx, slot.EndTime)
 			if err != nil {
 				log.Println("Error converting end time to UTC:", err)
 				return err
@@ -179,8 +178,4 @@ func (s *eventService) DeleteEvent(ctx context.Context, eventID int64) error {
 	}
 
 	return nil
-}
-
-func slotKey(s model.EventSlot) string {
-	return fmt.Sprintf("%s-%s", s.StartTime, s.EndTime)
 }

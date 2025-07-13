@@ -4,6 +4,7 @@ import (
 	"context"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/rahulshewale153/meeting-scheduler-api/model"
@@ -138,8 +139,8 @@ func TestInsertEventSlots(t *testing.T) {
 	ctx := context.Background()
 	eventID := int64(1)
 	slot := model.EventSlot{
-		StartTime: "2023-10-01T10:00:00Z",
-		EndTime:   "2023-10-01T11:00:00Z",
+		StartTime: time.Date(2025, 07, 13, 10, 0, 0, 0, time.UTC),
+		EndTime:   time.Date(2025, 07, 13, 11, 0, 0, 0, time.UTC),
 	}
 
 	query := `INSERT INTO event_slot (event_id, start_time, end_time) VALUES (?, ?, ?)`
@@ -205,6 +206,8 @@ func TestGetEventSlots(t *testing.T) {
 	repository := NewEventRepository(db)
 	ctx := context.Background()
 	eventID := int64(1)
+	startTime := time.Date(2025, 07, 13, 10, 0, 0, 0, time.UTC)
+	endTime := time.Date(2025, 07, 13, 11, 0, 0, 0, time.UTC)
 
 	query := `SELECT id, start_time, end_time FROM event_slot WHERE event_id = ?`
 	t.Run("Function must return an error when the read operation fails", func(t *testing.T) {
@@ -220,7 +223,7 @@ func TestGetEventSlots(t *testing.T) {
 		mock.ExpectQuery(regexp.QuoteMeta(query)).
 			WithArgs(eventID).
 			WillReturnRows(sqlmock.NewRows([]string{"id", "start_time", "end_time"}).
-				AddRow(nil, "2023-10-01T10:00:00Z", "2023-10-01T11:00:00Z"))
+				AddRow(nil, startTime, endTime))
 		_, err := repository.GetEventSlots(ctx, eventID)
 		assert.Error(t, err)
 	})
@@ -236,8 +239,8 @@ func TestGetEventSlots(t *testing.T) {
 
 	t.Run("Function must return the event slots when the read operation is successful", func(t *testing.T) {
 		rows := sqlmock.NewRows([]string{"id", "start_time", "end_time"}).
-			AddRow(1, "2023-10-01T10:00:00Z", "2023-10-01T11:00:00Z").
-			AddRow(2, "2023-10-01T12:00:00Z", "2023-10-01T13:00:00Z")
+			AddRow(1, startTime, endTime).
+			AddRow(2, startTime, endTime)
 
 		mock.ExpectQuery(regexp.QuoteMeta(query)).
 			WithArgs(eventID).
@@ -248,6 +251,60 @@ func TestGetEventSlots(t *testing.T) {
 		assert.Len(t, slots, 2)
 		assert.Equal(t, int64(1), slots[0].ID)
 		assert.Equal(t, int64(2), slots[1].ID)
+	})
+
+}
+
+func TestGetEvent(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	assert.Nil(t, err)
+	defer db.Close()
+
+	repository := NewEventRepository(db)
+	ctx := context.Background()
+	eventID := int64(1)
+	createdAT := time.Date(2025, 07, 13, 10, 0, 0, 0, time.UTC)
+	updatedAT := time.Date(2025, 07, 13, 10, 0, 0, 0, time.UTC)
+
+	query := `SELECT id, title, organizer_id, duration_minutes, created_at, updated_at FROM event_detail WHERE id = ?`
+	t.Run("Function must return an error when the read operation fails", func(t *testing.T) {
+		mock.ExpectQuery(regexp.QuoteMeta(query)).
+			WithArgs(eventID).
+			WillReturnError(assert.AnError)
+
+		_, err := repository.GetEvent(ctx, eventID)
+		assert.Error(t, err)
+	})
+
+	t.Run("Function must return an error when scanning the row fails", func(t *testing.T) {
+		mock.ExpectQuery(regexp.QuoteMeta(query)).
+			WithArgs(eventID).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "title", "organizer_id", "duration_minutes", "created_at", "updated_at"}).
+				AddRow(nil, "Test Event", 1, 60, createdAT, updatedAT))
+		_, err := repository.GetEvent(ctx, eventID)
+		assert.Error(t, err)
+	})
+
+	t.Run("Function must return an empty event when no event is found", func(t *testing.T) {
+		mock.ExpectQuery(regexp.QuoteMeta(query)).
+			WithArgs(eventID).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "title", "organizer_id", "duration_minutes", "created_at", "updated_at"}))
+		event, err := repository.GetEvent(ctx, eventID)
+		assert.NoError(t, err)
+		assert.Equal(t, model.Event{}, event)
+	})
+
+	t.Run("Function must return the event when the read operation is successful", func(t *testing.T) {
+		rows := sqlmock.NewRows([]string{"id", "title", "organizer_id", "duration_minutes", "created_at", "updated_at"}).
+			AddRow(1, "Test Event", 1, 60, createdAT, updatedAT)
+
+		mock.ExpectQuery(regexp.QuoteMeta(query)).
+			WithArgs(eventID).
+			WillReturnRows(rows)
+		event, err := repository.GetEvent(ctx, eventID)
+		assert.NoError(t, err)
+		assert.Equal(t, int64(1), event.ID)
+		assert.Equal(t, "Test Event", event.Title)
 	})
 
 }

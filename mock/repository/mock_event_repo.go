@@ -28,7 +28,6 @@ func (m *MockEventRepository) DeleteEvent(ctx context.Context, tx *sql.Tx, event
 }
 
 func (m *MockEventRepository) InsertEventSlots(ctx context.Context, tx *sql.Tx, eventID int64, slot model.EventSlot) error {
-
 	args := m.Called(ctx, tx, eventID, slot)
 	return args.Error(0)
 }
@@ -41,4 +40,9 @@ func (m *MockEventRepository) DeleteEventSlots(ctx context.Context, tx *sql.Tx, 
 func (m *MockEventRepository) GetEventSlots(ctx context.Context, eventID int64) ([]model.EventSlot, error) {
 	args := m.Called(ctx, eventID)
 	return args.Get(0).([]model.EventSlot), args.Error(1)
+}
+
+func (m *MockEventRepository) GetEvent(ctx context.Context, eventID int64) (model.Event, error) {
+	args := m.Called(ctx, eventID)
+	return args.Get(0).(model.Event), args.Error(1)
 }

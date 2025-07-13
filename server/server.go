@@ -81,10 +81,12 @@ func (s *server) Start() {
 	//setup service
 	eventService := service.NewEventService(transactionManager, eventRepo)
 	userAvailabilityService := service.NewUserAvailabilityService(transactionManager, userAvailabilityRepo)
+	recommendationService := service.NewRecommendationService(eventRepo, userAvailabilityRepo)
 
 	//setup handler
 	eventHandler := handler.NewEventHandler(eventService)
 	userAvailabilityHandler := handler.NewUserAvailabilityHandler(userAvailabilityService)
+	recommendationHandler := handler.NewRecommendationHandler(recommendationService)
 
 	//setup http server
 	r := mux.NewRouter()
@@ -104,6 +106,9 @@ func (s *server) Start() {
 	r.HandleFunc("/events/{event_id}/availability/{user_id}", userAvailabilityHandler.GetUserAvailability).Methods(http.MethodGet)
 	r.HandleFunc("/events/{event_id}/availability/{user_id}", userAvailabilityHandler.UpdateUserAvailability).Methods(http.MethodPut)
 	r.HandleFunc("/events/{event_id}/availability/{user_id}", userAvailabilityHandler.DeleteUserAvailability).Methods(http.MethodDelete)
+
+	//recommendation related api
+	r.HandleFunc("/events/{event_id}/recommendation", recommendationHandler.GetRecommendedSlots).Methods(http.MethodGet)
 
 	s.httpServer.Handler = r
 	go func() {

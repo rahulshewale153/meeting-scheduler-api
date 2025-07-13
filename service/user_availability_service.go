@@ -84,21 +84,21 @@ func (s *userAvailabilityService) UpdateUserAvailability(ctx context.Context, us
 	}
 
 	for _, e := range existingUserAvailability {
-		key := slotKey(e)
+		key := utils.SlotKey(e)
 		existingMap[key] = e
 	}
 
 	for _, slot := range userAvailability.Availability {
-		key := slotKey(slot)
+		key := utils.SlotKey(slot)
 		incomingMap[key] = slot
 		if _, ok := existingMap[key]; !ok {
-			slot.StartTime, err = utils.ConvertToUTC(ctx, slot.StartTime)
+			slot.StartTime, err = utils.ConvertTimeToUTC(ctx, slot.StartTime)
 			if err != nil {
 				log.Println("Error converting start time to UTC:", err)
 				return err
 			}
 
-			slot.EndTime, err = utils.ConvertToUTC(ctx, slot.EndTime)
+			slot.EndTime, err = utils.ConvertTimeToUTC(ctx, slot.EndTime)
 			if err != nil {
 				log.Println("Error converting end time to UTC:", err)
 				return err
@@ -126,7 +126,7 @@ func (s *userAvailabilityService) UpdateUserAvailability(ctx context.Context, us
 }
 
 // DeleteUserAvailability deletes a user availability record from the database.
-func (s *userAvailabilityService) DeleteUserAvailability(ctx context.Context, userID int64, availabilityID int64) error {
+func (s *userAvailabilityService) DeleteUserAvailability(ctx context.Context, userID int64, eventID int64) error {
 	tx, err := s.transactionManager.BeginTransaction(ctx)
 	if err != nil {
 		return err
@@ -145,7 +145,7 @@ func (s *userAvailabilityService) DeleteUserAvailability(ctx context.Context, us
 		}
 	}()
 
-	err = s.userAvailabilityRepo.DeleteUserAvailability(ctx, tx, userID, availabilityID)
+	err = s.userAvailabilityRepo.DeleteUserAvailability(ctx, tx, userID, eventID)
 	if err != nil {
 		log.Println("Error deleting user availability:", err)
 		return err

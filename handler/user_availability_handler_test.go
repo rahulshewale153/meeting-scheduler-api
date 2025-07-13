@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gorilla/mux"
 	mockService "github.com/rahulshewale153/meeting-scheduler-api/mock/service"
@@ -28,7 +29,7 @@ func TestInsertUserAvailability(t *testing.T) {
 	})
 
 	t.Run("missing event_id in URL, should return bad request", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPost, "/user_availability/1", strings.NewReader(validRequest))
+		req := httptest.NewRequest(http.MethodPost, "/events/1/availability/1", strings.NewReader(validRequest))
 		req = mux.SetURLVars(req, map[string]string{"user_id": "1"})
 		w := httptest.NewRecorder()
 		userAvailabilityHandler.InsertUserAvailability(w, req)
@@ -37,7 +38,7 @@ func TestInsertUserAvailability(t *testing.T) {
 	})
 
 	t.Run("missing user_id in URL, should return bad request", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPost, "/user_availability/1/", strings.NewReader(validRequest))
+		req := httptest.NewRequest(http.MethodPost, "/events/1/availability/1", strings.NewReader(validRequest))
 
 		req = mux.SetURLVars(req, map[string]string{"event_id": "1"})
 		w := httptest.NewRecorder()
@@ -47,7 +48,7 @@ func TestInsertUserAvailability(t *testing.T) {
 	})
 
 	t.Run("service error, should return internal server error", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPost, "/user_availability/1/1", strings.NewReader(validRequest))
+		req := httptest.NewRequest(http.MethodPost, "/events/1/availability/1", strings.NewReader(validRequest))
 		req = mux.SetURLVars(req, map[string]string{"user_id": "1", "event_id": "1"})
 		w := httptest.NewRecorder()
 		mockUserAvailService.On("InsertUserAvailability", req.Context(), mock.Anything).Return(assert.AnError).Once()
@@ -58,7 +59,7 @@ func TestInsertUserAvailability(t *testing.T) {
 	})
 
 	t.Run("successful insert, should return created status", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPost, "/user_availability/1/1", strings.NewReader(validRequest))
+		req := httptest.NewRequest(http.MethodPost, "/events/1/availability/1", strings.NewReader(validRequest))
 		req = mux.SetURLVars(req, map[string]string{"user_id": "1", "event_id": "1"})
 		w := httptest.NewRecorder()
 		mockUserAvailService.On("InsertUserAvailability", req.Context(), mock.Anything).Return(nil).Once()
@@ -78,7 +79,7 @@ func TestUpdateUserAvailability(t *testing.T) {
 
 	t.Run("invalid JSON request, should return an error", func(t *testing.T) {
 		invalidRequest := `\invalid_json`
-		req := httptest.NewRequest(http.MethodPut, "/user_availability/1/1", strings.NewReader(invalidRequest))
+		req := httptest.NewRequest(http.MethodPut, "/events/1/availability/1", strings.NewReader(invalidRequest))
 		w := httptest.NewRecorder()
 
 		userAvailabilityHandler.UpdateUserAvailability(w, req)
@@ -86,7 +87,7 @@ func TestUpdateUserAvailability(t *testing.T) {
 	})
 
 	t.Run("missing event_id in URL, should return bad request", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPut, "/user_availability/1", strings.NewReader(validRequest))
+		req := httptest.NewRequest(http.MethodPut, "/events/1/availability/1", strings.NewReader(validRequest))
 		req = mux.SetURLVars(req, map[string]string{"user_id": "1"})
 		w := httptest.NewRecorder()
 		userAvailabilityHandler.UpdateUserAvailability(w, req)
@@ -95,7 +96,7 @@ func TestUpdateUserAvailability(t *testing.T) {
 	})
 
 	t.Run("missing user_id in URL, should return bad request", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPut, "/user_availability/1/", strings.NewReader(validRequest))
+		req := httptest.NewRequest(http.MethodPut, "/events/1/availability/1", strings.NewReader(validRequest))
 		req = mux.SetURLVars(req, map[string]string{"event_id": "1"})
 		w := httptest.NewRecorder()
 		userAvailabilityHandler.UpdateUserAvailability(w, req)
@@ -104,7 +105,7 @@ func TestUpdateUserAvailability(t *testing.T) {
 	})
 
 	t.Run("service error, should return internal server error", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPut, "/user_availability/1/1", strings.NewReader(validRequest))
+		req := httptest.NewRequest(http.MethodPut, "/events/1/availability/1", strings.NewReader(validRequest))
 		req = mux.SetURLVars(req, map[string]string{"user_id": "1", "event_id": "1"})
 		w := httptest.NewRecorder()
 		mockUserAvailService.On("UpdateUserAvailability", req.Context(), mock.Anything).Return(assert.AnError).Once()
@@ -116,7 +117,7 @@ func TestUpdateUserAvailability(t *testing.T) {
 	})
 
 	t.Run("successful update, should return no content", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPut, "/user_availability/1/1", strings.NewReader(validRequest))
+		req := httptest.NewRequest(http.MethodPut, "/events/1/availability/1", strings.NewReader(validRequest))
 		req = mux.SetURLVars(req, map[string]string{"user_id": "1", "event_id": "1"})
 		w := httptest.NewRecorder()
 		mockUserAvailService.On("UpdateUserAvailability", req.Context(), mock.Anything).Return(nil).Once()
@@ -134,7 +135,7 @@ func TestGetUserAvailability(t *testing.T) {
 	userAvailabilityHandler := NewUserAvailabilityHandler(mockUserAvailService)
 
 	t.Run("missing event_id in URL, should return bad request", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/user_availability/1", nil)
+		req := httptest.NewRequest(http.MethodGet, "/events/1/availability/1", nil)
 		req = mux.SetURLVars(req, map[string]string{"user_id": "1"})
 		w := httptest.NewRecorder()
 		userAvailabilityHandler.GetUserAvailability(w, req)
@@ -143,7 +144,7 @@ func TestGetUserAvailability(t *testing.T) {
 	})
 
 	t.Run("missing user_id in URL, should return bad request", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/user_availability/1/", nil)
+		req := httptest.NewRequest(http.MethodGet, "/events/1/availability/1", nil)
 		req = mux.SetURLVars(req, map[string]string{"event_id": "1"})
 		w := httptest.NewRecorder()
 		userAvailabilityHandler.GetUserAvailability(w, req)
@@ -152,7 +153,7 @@ func TestGetUserAvailability(t *testing.T) {
 	})
 
 	t.Run("service error, should return internal server error", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/user_availability/1/1", nil)
+		req := httptest.NewRequest(http.MethodGet, "/events/1/availability/1", nil)
 		req = mux.SetURLVars(req, map[string]string{"user_id": "1", "event_id": "1"})
 		w := httptest.NewRecorder()
 		mockUserAvailService.On("GetUserAvailability", req.Context(), int64(1), int64(1)).Return(nil, assert.AnError).Once()
@@ -164,13 +165,13 @@ func TestGetUserAvailability(t *testing.T) {
 	})
 
 	t.Run("successful retrieval of user availability", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/user_availability/1/1", nil)
+		req := httptest.NewRequest(http.MethodGet, "/events/1/availability/1", nil)
 		req = mux.SetURLVars(req, map[string]string{"user_id": "1", "event_id": "1"})
 		w := httptest.NewRecorder()
 
 		mockResponse := []model.EventSlot{
-			{ID: 1, StartTime: "2023-10-01 10:00:00", EndTime: "2023-10-01 11:00:00"},
-			{ID: 2, StartTime: "2023-10-01 12:00:00", EndTime: "2023-10-01 13:00:00"},
+			{ID: 1, StartTime: time.Date(2025, 07, 13, 10, 0, 0, 0, time.UTC), EndTime: time.Date(2025, 07, 13, 11, 0, 0, 0, time.UTC)},
+			{ID: 2, StartTime: time.Date(2025, 07, 13, 12, 0, 0, 0, time.UTC), EndTime: time.Date(2025, 07, 13, 13, 0, 0, 0, time.UTC)},
 		}
 		mockUserAvailService.On("GetUserAvailability", req.Context(), int64(1), int64(1)).Return(mockResponse, nil).Once()
 		userAvailabilityHandler.GetUserAvailability(w, req)
@@ -185,7 +186,7 @@ func TestDeleteUserAvailability(t *testing.T) {
 	userAvailabilityHandler := NewUserAvailabilityHandler(mockUserAvailService)
 
 	t.Run("missing event_id in URL, should return bad request", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodDelete, "/user_availability/1", nil)
+		req := httptest.NewRequest(http.MethodDelete, "/events/1/availability/1", nil)
 		req = mux.SetURLVars(req, map[string]string{"user_id": "1"})
 		w := httptest.NewRecorder()
 		userAvailabilityHandler.DeleteUserAvailability(w, req)
@@ -194,7 +195,7 @@ func TestDeleteUserAvailability(t *testing.T) {
 	})
 
 	t.Run("missing user_id in URL, should return bad request", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodDelete, "/user_availability/1/", nil)
+		req := httptest.NewRequest(http.MethodDelete, "/events/1/availability/1", nil)
 		req = mux.SetURLVars(req, map[string]string{"event_id": "1"})
 		w := httptest.NewRecorder()
 		userAvailabilityHandler.DeleteUserAvailability(w, req)
@@ -203,7 +204,7 @@ func TestDeleteUserAvailability(t *testing.T) {
 	})
 
 	t.Run("service error, should return internal server error", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodDelete, "/user_availability/1/1", nil)
+		req := httptest.NewRequest(http.MethodDelete, "/events/1/availability/1", nil)
 		req = mux.SetURLVars(req, map[string]string{"user_id": "1", "event_id": "1"})
 		w := httptest.NewRecorder()
 		mockUserAvailService.On("DeleteUserAvailability", req.Context(), int64(1), int64(1)).Return(assert.AnError).Once()
@@ -215,7 +216,7 @@ func TestDeleteUserAvailability(t *testing.T) {
 	})
 
 	t.Run("successful deletion of user availability", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodDelete, "/user_availability/1/1", nil)
+		req := httptest.NewRequest(http.MethodDelete, "/events/1/availability/1", nil)
 		req = mux.SetURLVars(req, map[string]string{"user_id": "1", "event_id": "1"})
 		w := httptest.NewRecorder()
 
