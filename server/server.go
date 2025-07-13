@@ -11,6 +11,9 @@ import (
 	"github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
 	"github.com/rahulshewale153/meeting-scheduler-api/configreader"
+	"github.com/rahulshewale153/meeting-scheduler-api/handler"
+	"github.com/rahulshewale153/meeting-scheduler-api/repository"
+	"github.com/rahulshewale153/meeting-scheduler-api/service"
 )
 
 type server struct {
@@ -45,6 +48,7 @@ func setupMysqlDBConnection(config *configreader.Config) (*sql.DB, error) {
 		Addr:      fmt.Sprintf("%s:%d", mysqlConfig.Host, mysqlConfig.Port),
 		DBName:    mysqlConfig.Database,
 		ParseTime: mysqlConfig.ParseTime,
+		Loc:       time.UTC,
 	}
 
 	connector, err := mysql.NewConnector(&mCfg)
@@ -68,6 +72,16 @@ func setupMysqlDBConnection(config *configreader.Config) (*sql.DB, error) {
 
 // service start with http endpoint
 func (s *server) Start() {
+	//setup repository
+	eventRepo := repository.NewEventRepository(s.mysqlDB)
+	transactionManager := repository.NewTransactionManager(s.mysqlDB)
+
+	//setup service
+	eventService := service.NewEventService(transactionManager, eventRepo)
+
+	//setup handler
+	eventHandler := handler.NewEventHandler(eventService)
+
 	//setup http server
 	r := mux.NewRouter()
 	//basic health api
@@ -75,6 +89,11 @@ func (s *server) Start() {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
 	}).Methods(http.MethodGet)
+
+	//event related api
+	r.HandleFunc("/events", eventHandler.InsertEvent).Methods(http.MethodPost)
+	r.HandleFunc("/events", eventHandler.UpdateEvent).Methods(http.MethodPut)
+	r.HandleFunc("/events/{event_id}", eventHandler.DeleteEvent).Methods(http.MethodDelete)
 
 	s.httpServer.Handler = r
 	go func() {

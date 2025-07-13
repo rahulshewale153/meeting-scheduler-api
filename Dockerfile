@@ -14,5 +14,4 @@ RUN go mod tidy
 COPY . .
 # Build the Go application
 RUN go build -o meeting-scheduler-api main.go
-EXPOSE 8080
 CMD ["./meeting-scheduler-api"]
